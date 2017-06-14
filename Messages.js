@@ -26,7 +26,10 @@ const HELP = "You can use this skill by asking something like: where can I get C
 
 const STOP = "There is nothing to stop. Did you mean to ask something else?";
 
-const RESULT = "The top restaurant returned is ";
+// const RESULT = "The top restaurant returned is ";
+const generateMessage = function(name, address) {
+    return "The top restaurant returned is " + name + " at " + address;
+}
 
 const INVALID_LOCATION = "The location requested is invalid.";
 
@@ -46,7 +49,8 @@ module.exports = {
     "UNHANDLED": UNHANDLED,
     "HELP": HELP,
     "STOP": STOP,
-    "RESULT": RESULT,
+    // "RESULT": RESULT,
+    "generateMessage": generateMessage,
     "INVALID_LOCATION": INVALID_LOCATION,
     "GOOGLE_API_ERROR": GOOGLE_API_ERROR,
     "INVALID_CATEGORY": INVALID_CATEGORY,

@@ -178,7 +178,8 @@ const getRestaurantHandler = function() {
 					console.log(response)
 					console.log(response.jsonBody.businesses[0].name);
 					var business = response.jsonBody.businesses[0];
-					this.emit(":tell", Messages.RESULT + business.name);
+					var address = business.location.address1 + ", " + business.location.city + ", " + business.location.state;
+					this.emit(":tell", Messages.generateMessage(business.name, address));
 				}).catch(e => {
 					console.log(e);
 				});    
