@@ -28,6 +28,12 @@ const STOP = "There is nothing to stop. Did you mean to ask something else?";
 
 const RESULT = "The top restaurant returned is ";
 
+const INVALID_LOCATION = "The location requested is invalid.";
+
+const INVALID_CATEGORY = "There is no Yelp category called ";
+
+const GOOGLE_API_ERROR = "Something went wrong with Google Places API.";
+
 module.exports = {
     "WELCOME": WELCOME,
     "WHAT_TYPE": WHAT_TYPE,
@@ -41,4 +47,7 @@ module.exports = {
     "HELP": HELP,
     "STOP": STOP,
     "RESULT": RESULT,
+    "INVALID_LOCATION": INVALID_LOCATION,
+    "GOOGLE_API_ERROR": GOOGLE_API_ERROR,
+    "INVALID_CATEGORY": INVALID_CATEGORY,
 };

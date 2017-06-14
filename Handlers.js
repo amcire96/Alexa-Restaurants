@@ -1,7 +1,9 @@
 
-const AlexaDeviceAddressClient = require('./AlexaDeviceAddressClient');
 const yelp = require("yelp-fusion");
+const GoogleLocations = require("google-locations");
+const locations = new GoogleLocations("AIzaSyDxwi3ljXRRCiEanvO4hFNfYYtiu_K00Bw");
 
+const AlexaDeviceAddressClient = require('./AlexaDeviceAddressClient');
 const Events = require("./Events")
 const Intents = require("./Intents")
 const Messages = require("./Messages")
@@ -134,42 +136,63 @@ const getRestaurantHandler = function() {
     //     console.error(error);
     //     console.info("Ending getAddressHandler()");
     // });
-	yelp.accessToken(
-	    "sHVABhRi8dMSdCM1BqxUNA", 
-	    "4WlCGbo1cCwWKM0HiN22OuSgWrDdTxWdGa0Zo5htcigXT78OtqVGSgdsGR2ulPES")
-	.then(response => {
-	    console.log(response.jsonBody);
-	    console.log("Token is " + response.jsonBody.access_token);
-	    const token = String(response.jsonBody.access_token);
 
-		const postalCode = "01720"; //obviously going to change
-		const restaurant_type = this.event.request.intent.slots.Restaurant_Type.value;
+    const location = this.event.request.intent.slots.Location.value;
+    const restaurant_type = this.event.request.intent.slots.Restaurant_Type.value.toLowerCase();
 
-		console.log(postalCode);
-		console.log(restaurant_type);
-		console.log(category_name_to_alias[restaurant_type]);
-		const client = yelp.client(token);
-		client.search({
-			location: String(postalCode),
-			categories: [category_name_to_alias[restaurant_type]],
-			open_now: true, // subject to change
-			limit: 3,
-		}).then(response => {
-			console.log(response)
-			console.log(response.jsonBody.businesses[0].name);
-			var business = response.jsonBody.businesses[0];
-			this.emit(":tell", Messages.RESULT + business.name);
-		}).catch(e => {
-			console.log(e);
-		});    
+    locations.autocomplete({
+    	input: location,
+    	types: "(cities)"
+    }, (err, response) => {
+    	// console.log(response);
+    	// console.log("autocomplete: ", response.predictions);
+    	console.log("autocomplete err " + err);
+    	console.log(response);
 
-	}).catch(e => {
-	    console.log(e);
-	});
+    	if (response.status == "OK") {
+    		const top_pred = response.predictions[0];
+    		const location_description = top_pred["description"];
 
-	
+    		yelp.accessToken(
+			    "sHVABhRi8dMSdCM1BqxUNA", 
+			    "4WlCGbo1cCwWKM0HiN22OuSgWrDdTxWdGa0Zo5htcigXT78OtqVGSgdsGR2ulPES")
+			.then(response => {
+			    console.log("Token is " + response.jsonBody.access_token);
+			    const token = String(response.jsonBody.access_token);
 
+				console.log("alexa rest type " + restaurant_type);
+				console.log("yelp rest type " + category_name_to_alias[restaurant_type]);
 
+				if (!(restaurant_type in category_name_to_alias)) {
+					this.emit(":tell", Messages.INVALID_CATEGORY + restaurant_type)
+					return;
+				}
+
+				const client = yelp.client(token);
+				client.search({
+					location: location_description,
+					categories: [category_name_to_alias[restaurant_type]],
+					open_now: true, // subject to change
+					limit: 3,
+				}).then(response => {
+					console.log(response)
+					console.log(response.jsonBody.businesses[0].name);
+					var business = response.jsonBody.businesses[0];
+					this.emit(":tell", Messages.RESULT + business.name);
+				}).catch(e => {
+					console.log(e);
+				});    
+			}).catch(e => {
+			    console.log(e);
+			});
+    	}
+    	else if (response.status == "ZERO_RESULTS") {
+    		this.emit(":tell", Messages.INVALID_LOCATION);
+    	}
+    	else {
+    		this.emit(":tell", Messages.GOOGLE_API_ERROR);
+    	}
+    });
 }
 
 
