@@ -30,7 +30,7 @@ const newSessionRequestHandler = function() {
 
 const launchRequestHandler = function() {
     console.info("Starting launchRequestHandler()");
-    this.emit(":ask", Messages.WELCOME + Messages.WHAT_TYPE, Messages.WHAT_TYPE);
+    this.emit(":ask", Messages.WELCOME + " " + Messages.WHAT_TYPE_AND_LOCATION, Messages.WHAT_TYPE_AND_LOCATION);
     console.info("Ending launchRequestHandler()");
 };
 
@@ -60,7 +60,8 @@ const amazonCancelHandler = function() {
 
 const amazonStopHandler = function() {
     console.info("Starting amazonStopHandler()");
-    this.emit(":ask", Messages.STOP, Messages.STOP);
+    // this.emit(":ask", Messages.STOP, Messages.STOP);
+    this.emit(":tell", Messages.GOODBYE);
     console.info("Ending amazonStopHandler()");
 };
 
@@ -164,7 +165,9 @@ const getRestaurantHandler = function() {
 				console.log("yelp rest type " + category_name_to_alias[restaurant_type]);
 
 				if (!(restaurant_type in category_name_to_alias)) {
-					this.emit(":tell", Messages.INVALID_CATEGORY + restaurant_type)
+					this.emit(":ask", 
+						Messages.INVALID_CATEGORY + restaurant_type + ". " + Messages.WHAT_TYPE_AND_LOCATION,
+						Messages.WHAT_TYPE_AND_LOCATION);
 					return;
 				}
 
@@ -172,14 +175,21 @@ const getRestaurantHandler = function() {
 				client.search({
 					location: location_description,
 					categories: [category_name_to_alias[restaurant_type]],
-					open_now: true, // subject to change
+					// open_now: true, // subject to change
 					limit: 3,
 				}).then(response => {
 					console.log(response)
-					console.log(response.jsonBody.businesses[0].name);
-					var business = response.jsonBody.businesses[0];
-					var address = business.location.address1 + ", " + business.location.city + ", " + business.location.state;
-					this.emit(":tell", Messages.generateMessage(business.name, address));
+
+					if (response.jsonBody.businesses.length == 0) {
+						this.emit(":tell", Messages.NO_RESULTS);
+					}
+					else {
+						console.log(response.jsonBody.businesses[0].name);
+						var business = response.jsonBody.businesses[0];
+						var address = business.location.address1 + ", " + business.location.city + ", " + business.location.state;
+						this.emit(":tell", Messages.generateMessage(business.name, address));
+					}
+					
 				}).catch(e => {
 					console.log(e);
 				});    
@@ -188,10 +198,16 @@ const getRestaurantHandler = function() {
 			});
     	}
     	else if (response.status == "ZERO_RESULTS") {
-    		this.emit(":tell", Messages.INVALID_LOCATION);
+    		// this.emit(":tell", Messages.INVALID_LOCATION);
+    		this.emit(":ask", 
+				Messages.INVALID_LOCATION + " " + Messages.WHAT_TYPE_AND_LOCATION,
+				Messages.WHAT_TYPE_AND_LOCATION);
     	}
     	else {
-    		this.emit(":tell", Messages.GOOGLE_API_ERROR);
+    		// this.emit(":tell", Messages.GOOGLE_API_ERROR);
+    		this.emit(":ask", 
+				Messages.GOOGLE_API_ERROR + " " + Messages.WHAT_TYPE_AND_LOCATION,
+				Messages.WHAT_TYPE_AND_LOCATION);
     	}
     });
 }
